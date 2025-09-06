@@ -1,0 +1,2 @@
+#!/bin/bash
+# Maven wrapper
