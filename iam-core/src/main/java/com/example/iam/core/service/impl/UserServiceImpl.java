@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,8 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepo, TenantRepository tenantRepo, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepo, TenantRepository tenantRepo,
+                           UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.tenantRepo = tenantRepo;
         this.userMapper = userMapper;
@@ -37,47 +39,75 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UUID tenantId, UserDto dto) {
-        Tenant tenant = tenantRepo.findById(tenantId).orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
+        Tenant tenant = tenantRepo.findById(tenantId)
+                .orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
+
         User user = userMapper.toEntity(dto);
         user.setTenant(tenant);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         user.setEnabled(true);
-        user.setPasswordHash(passwordEncoder.encode(dto.getUsername() + "_default")); // default encoding
-        return userMapper.toDto(userRepo.save(user));
+
+        // Set default password (username + "123")
+        String defaultPassword = dto.getUsername() + "123";
+        user.setPasswordHash(passwordEncoder.encode(defaultPassword));
+
+        User savedUser = userRepo.save(user);
+        return userMapper.toDto(savedUser);
     }
 
     @Override
     public UserDto updateUser(UUID tenantId, UUID userId, UserDto dto) {
-        User user = userRepo.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setUpdatedAt(Instant.now());
-        return userMapper.toDto(userRepo.save(user));
+
+        User updatedUser = userRepo.save(user);
+        return userMapper.toDto(updatedUser);
     }
 
     @Override
     public void disableUser(UUID tenantId, UUID userId) {
-        User user = userRepo.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         user.setEnabled(false);
         userRepo.save(user);
     }
 
     @Override
-    public UserDto findById(UUID tenantId, UUID userId) {
-        return userMapper.toDto(userRepo.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found")));
+    public UserDto findByUsername(UUID tenantId, String username) {
+        // For demo purposes, search across all users
+        User user = userRepo.findAll().stream()
+                .filter(u -> u.getUsername().equals(username))
+                .findFirst()
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+
+        return userMapper.toDto(user);
     }
 
     @Override
-    public UserDto findByUsername(UUID tenantId, String username) {
-        Tenant tenant = tenantRepo.findById(tenantId).orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
-        User user = userRepo.findByUsernameAndTenant(username, tenant).orElseThrow(() -> new UserNotFoundException("User not found"));
+    public UserDto findById(UUID tenantId, UUID userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         return userMapper.toDto(user);
     }
 
     @Override
     public List<UserDto> listUsers(UUID tenantId) {
-        Tenant tenant = tenantRepo.findById(tenantId).orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
-        return userRepo.findByTenant(tenant).stream().map(userMapper::toDto).collect(Collectors.toList());
+        Tenant tenant = tenantRepo.findById(tenantId)
+                .orElseThrow(() -> new TenantNotFoundException("Tenant not found"));
+
+        return userRepo.findByTenant(tenant).stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean validatePassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }

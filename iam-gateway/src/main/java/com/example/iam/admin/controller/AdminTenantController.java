@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/** Controller for managing tenants by system-wide admin */
 @RestController
 @RequestMapping("/admin/tenants")
 public class AdminTenantController {
@@ -25,12 +24,12 @@ public class AdminTenantController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TenantDto> updateTenant(@PathVariable UUID id, @RequestBody TenantDto dto) {
+    public ResponseEntity<TenantDto> updateTenant(@PathVariable("id") UUID id, @RequestBody TenantDto dto) {
         return ResponseEntity.ok(tenantService.updateTenant(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTenant(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteTenant(@PathVariable("id") UUID id) {
         tenantService.deleteTenant(id);
         return ResponseEntity.noContent().build();
     }
@@ -41,7 +40,7 @@ public class AdminTenantController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TenantDto> getTenant(@PathVariable UUID id) {
+    public ResponseEntity<TenantDto> getTenant(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(tenantService.getTenant(id));
     }
 }

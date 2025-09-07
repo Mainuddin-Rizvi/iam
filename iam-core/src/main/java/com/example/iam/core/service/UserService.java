@@ -12,4 +12,5 @@ public interface UserService {
     UserDto findById(UUID tenantId, UUID userId);
     UserDto findByUsername(UUID tenantId, String username);
     List<UserDto> listUsers(UUID tenantId);
+    boolean validatePassword(String rawPassword, String encodedPassword);
 }

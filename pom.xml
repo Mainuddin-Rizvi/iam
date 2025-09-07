@@ -25,12 +25,9 @@
         <module>iam-domain</module>
         <module>iam-core</module>
         <module>iam-auth</module>
-        <module>iam-admin-api</module>
-        <module>iam-tenant-api</module>
         <module>iam-saml</module>
         <module>iam-oidc</module>
         <module>iam-gateway</module>
-        <module>iam-migration</module>
     </modules>
 
     <dependencyManagement>

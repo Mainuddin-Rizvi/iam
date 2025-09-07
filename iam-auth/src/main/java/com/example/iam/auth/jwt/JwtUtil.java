@@ -1,37 +1,48 @@
 package com.example.iam.auth.jwt;
 
-import com.example.iam.domain.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
-/** Utility for generating and parsing JWTs */
 @Component
 public class JwtUtil {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final long expirationMs = 3600000; // 1 hour
 
-    public String generateToken(User user, Map<String,Object> claims) {
+    public String generateToken(String username, Map<String, Object> claims) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(user.getUsername())
+                .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(Date.from(Instant.now().plusSeconds(3600)))
+                .setExpiration(Date.from(Instant.now().plusMillis(expirationMs)))
                 .signWith(key)
                 .compact();
     }
 
     public Claims parseToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
-    public boolean isTokenExpired(String token) {
-        return parseToken(token).getExpiration().before(new Date());
+    public boolean validateToken(String token) {
+        try {
+            parseToken(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String getUsernameFromToken(String token) {
+        return parseToken(token).getSubject();
     }
 }

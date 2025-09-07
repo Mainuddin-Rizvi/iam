@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/** Controller for managing users globally by super admin */
 @RestController
 @RequestMapping("/admin/users")
 public class AdminUserController {
@@ -20,30 +19,32 @@ public class AdminUserController {
     }
 
     @PostMapping("/{tenantId}")
-    public ResponseEntity<UserDto> createUser(@PathVariable UUID tenantId, @RequestBody UserDto dto) {
+    public ResponseEntity<UserDto> createUser(@PathVariable("tenantId") UUID tenantId, @RequestBody UserDto dto) {
         return ResponseEntity.ok(userService.createUser(tenantId, dto));
     }
 
     @PutMapping("/{tenantId}/{userId}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable UUID tenantId,
-                                              @PathVariable UUID userId,
+    public ResponseEntity<UserDto> updateUser(@PathVariable("tenantId") UUID tenantId,
+                                              @PathVariable("userId") UUID userId,
                                               @RequestBody UserDto dto) {
         return ResponseEntity.ok(userService.updateUser(tenantId, userId, dto));
     }
 
     @DeleteMapping("/{tenantId}/{userId}")
-    public ResponseEntity<Void> disableUser(@PathVariable UUID tenantId, @PathVariable UUID userId) {
+    public ResponseEntity<Void> disableUser(@PathVariable("tenantId") UUID tenantId,
+                                            @PathVariable("userId") UUID userId) {
         userService.disableUser(tenantId, userId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{tenantId}/{userId}")
-    public ResponseEntity<UserDto> getUser(@PathVariable UUID tenantId, @PathVariable UUID userId) {
+    public ResponseEntity<UserDto> getUser(@PathVariable("tenantId") UUID tenantId,
+                                           @PathVariable("userId") UUID userId) {
         return ResponseEntity.ok(userService.findById(tenantId, userId));
     }
 
     @GetMapping("/{tenantId}")
-    public ResponseEntity<List<UserDto>> listUsers(@PathVariable UUID tenantId) {
+    public ResponseEntity<List<UserDto>> listUsers(@PathVariable("tenantId") UUID tenantId) {
         return ResponseEntity.ok(userService.listUsers(tenantId));
     }
 }
